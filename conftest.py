@@ -1,16 +1,6 @@
 import pytest
 
 
-@pytest.fixture  # фикстура, которая возвращает словарь в формате {книга:''}
-def only_books():
-    only_books = {'Spacebred Generations': '',
-                  'The Shining': '',
-                  'The Bourne Identity': '',
-                  'Aladdin': '',
-                  'Tartuffe': ''}
-    return only_books
-
-
 @pytest.fixture  # фикстура, которая возвращает словарь в формате {книга:жанр}
 def filled_books_genre():
     filled_books_genre = {'Spacebred Generations': 'Фантастика',

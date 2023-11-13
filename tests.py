@@ -18,33 +18,37 @@ class TestBooksCollector:
         collector.add_new_book('Что делать, если ваш кот хочет вас убить')
         assert len(collector.get_books_genre()) == 2
 
-    # проверяем добавление уже существующих в словаре книг и книг с названием > 40 символов
-    @pytest.mark.parametrize('name', ['Aladdin', 'Eta kniga soderzhit v nazvanii 41 simvol!'])
-    def test_add_new_book_add_no_valid_name(self, name, only_books):
+    # проверяем, что в books_genre можно добавить книги с названием = 1 и 40 символов
+    @pytest.mark.parametrize('name', ['A', 'Eta kniga soderzhit v nazvanii 40 simvol'])
+    def test_add_new_book_add_valid_name(self, name):
         collector = BooksCollector()
-        collector.books_genre = only_books
         collector.add_new_book(name)
-        assert collector.get_books_genre() == {'Spacebred Generations': '', 'The Shining': '', 'The Bourne Identity': '',
-                                               'Aladdin': '', 'Tartuffe': ''}
+        assert len(collector.get_books_genre()) == 1
+
+    # проверяем, что в books_genre нельзя добавить книги с названием уже присутствующим в словаре, > 40 и =0 символов
+    @pytest.mark.parametrize('name', ['Eta kniga soderzhit v nazvanii 41 simvol!', '', 'Aladdin'])
+    def test_add_new_book_add_no_valid_name(self, name):
+        collector = BooksCollector()
+        collector.books_genre = {'Aladdin': ''}
+        collector.add_new_book(name)
+        assert collector.get_books_genre() == {'Aladdin': ''}
 
     # проверяем установку жанра для книги
-    def test_set_book_genre_set_horror_for_book(self, only_books):
+    def test_set_book_genre_set_genre_for_book(self):
         collector = BooksCollector()
-        collector.books_genre = only_books
+        collector.books_genre = {'The Shining': ''}
         collector.set_book_genre('The Shining', 'Ужасы')
         assert collector.get_book_genre('The Shining') == 'Ужасы'
 
-    # проверяем установку отсутсвующего в списке жанра и отсутсвующее название книги
-    @pytest.mark.parametrize('name, genre', [['Aladdin', 'Science'], ['The Arrival', 'Фантастика']])
-    def test_set_book_genre_set_miss_genre_and_book_name(self, name, genre, only_books):
+    # проверяем установку отсутсвующего в списке genre жанра
+    def test_set_book_genre_set_miss_genre(self):
         collector = BooksCollector()
-        collector.books_genre = only_books
-        collector.set_book_genre(name, genre)
-        assert collector.get_books_genre() == {'Spacebred Generations': '', 'The Shining': '', 'The Bourne Identity': '',
-                                               'Aladdin': '', 'Tartuffe': ''}
+        collector.books_genre = {'Aladdin': ''}
+        collector.set_book_genre('Aladdin', 'Science')
+        assert collector.get_book_genre('Aladdin') == ''
 
     # проверяем возврат книг по жанру "Фантастика"
-    def test_get_books_with_specific_genre_get_book_fantastic(self, filled_books_genre):
+    def test_get_books_with_specific_genre_get_book_with_genre(self, filled_books_genre):
         collector = BooksCollector()
         collector.books_genre = filled_books_genre
         assert collector.get_books_with_specific_genre('Фантастика') == ['Spacebred Generations']
@@ -62,27 +66,20 @@ class TestBooksCollector:
         collector.add_book_in_favorites('Tartuffe')
         assert 'Tartuffe' in collector.get_list_of_favorites_books()
 
-    # проверяем повторное добавление книги в избранное из списка books_genre
-    def test_add_book_in_favorites_add_old_book_from_books_genre(self, filled_books_genre):
+    # проверяем,что в favorites нельзя добавить книгу если: она уже есть, её нет в books_genre
+    @pytest.mark.parametrize('name', ['Tartuffe', 'Pinocchio'])
+    def test_add_book_in_favorites_add_old_and_miss_books(self, name, filled_books_genre):
         collector = BooksCollector()
-        collector.books_genre = filled_books_genre
-        collector.add_book_in_favorites('Tartuffe')
-        collector.add_book_in_favorites('Tartuffe')
-        assert len(collector.get_list_of_favorites_books()) == 1
-
-    # проверяем добавление книги в избранное отсутсвующей в списке books_genre
-    def test_add_book_in_favorites_add_miss_book(self, filled_books_genre):
-        collector = BooksCollector()
-        collector.books_genre = filled_books_genre
-        collector.add_book_in_favorites('Pinocchio')
-        assert collector.get_list_of_favorites_books() == []
+        collector.favorites = ['Tartuffe']
+        collector.add_book_in_favorites(name)
+        assert collector.get_list_of_favorites_books() == ['Tartuffe']
 
     # проверяем удаление добавленной книги из списка избранного
     def test_delete_book_from_favorites_book_in_favorites(self, filled_favorites):
         collector = BooksCollector()
         collector.favorites = filled_favorites
         collector.delete_book_from_favorites('Aladdin')
-        assert collector.get_list_of_favorites_books() == ['Spacebred Generations', 'The Bourne Identity']
+        assert 'Aladdin' not in collector.get_list_of_favorites_books()
 
     # проверяем удаление отсутствующей книги из списка избранного
     def test_delete_book_from_favorites_book_not_in_favorites(self, filled_favorites):
